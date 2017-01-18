@@ -1,0 +1,151 @@
+/* Colors: http://htmlcolorcodes.com/ */
+
+html, body {
+    height: 100%;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    font-family: sans-serif;
+    font-weight: bold;
+    font-size: 2em;
+}
+
+.info {
+    max-width: 500px;
+    font-size: 0.4em;
+    font-weight: normal;
+}
+
+.info .major,
+.info .minor,
+.info .dominant {
+    margin: 0;
+}
+
+.progression,
+.progression * {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    margin: 4px;
+    flex-wrap: none;
+}
+
+.chord-stack {
+    display: flex;
+    flex-direction: column;
+}
+
+.chord-numeral {
+    color: #444;
+}
+
+.progression {
+    margin: 0;
+}
+
+.minor {
+    color: rgb(52, 152, 219);
+}
+
+.major {
+    color: rgb(46, 204, 113);
+}
+
+.dominant {
+    color: rgb(243, 156, 18);
+}
+
+.minor,
+.major,
+.dominant {
+    position: relative;
+    margin: 8px 16px 0 0;
+}
+
+.chord-substitutions {
+    position: absolute;
+    top: -8px;
+    right: -16px;
+    /* cursor: pointer; */
+    /* width: 16px; */
+    margin: 0;
+}
+
+.chord-substitutions a {
+    font-size: 10px;
+    line-height: 1;
+    color: rgba(0,0,0,0.5);
+    text-decoration: none;
+    text-align: center;
+}
+
+.substitution-collapse {
+    position: absolute;
+    top: -16px;
+    right: -16px;
+    font-size: 16px;
+    line-height: 1;
+    color: rgba(0,0,0,0.5);
+    width: 16px;
+    text-align: center;
+    text-decoration: none;
+    margin: 0;
+}
+
+.ii-V {
+    position: relative;
+    border: 16px solid rgba(52, 152, 219, 0.125);
+    font-size: 1em;
+}
+
+.ii-V::before {
+    position: absolute;
+    top: -15px;
+    left: 0px;
+    font-size: 12px;
+    line-height: 16px;
+    color: #fff;
+    font-weight: normal;
+    content: "ii-V";
+}
+
+.V-I {
+    position: relative;
+    border: 16px solid rgba(243, 156, 18, 0.125);
+    font-size: 1em;
+}
+
+.V-I::before {
+    position: absolute;
+    top: -15px;
+    left: 0px;
+    font-size: 12px;
+    line-height: 16px;
+	  color: #fff;
+	  font-weight: normal;
+	  content: "V-I";
+}
+
+.tritone {
+    position: relative;
+    border: 16px solid rgba(243, 156, 18, 0.125);
+    font-size: 1em;
+}
+
+.tritone::before {
+    position: absolute;
+    top: -15px;
+    left: 0px;
+    font-size: 12px;
+    line-height: 16px;
+	  color: #fff;
+	  font-weight: normal;
+	  content: "tritone";
+}
