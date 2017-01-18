@@ -8,21 +8,22 @@ window.teoria = teoria;
 
 const Node = ({scale, node, substituteChord, collapse}) => {
 
-    function getNumeral(chord, scale) {
+    function getNumeral(chord, name, scale) {
         let scaleIndex = note(chord.root.name()).scaleDegree(scale);
         let numeral = ["?", "I", "II", "III", "IV", "V", "VI", "VII"][scaleIndex];
         switch (chord.quality()) {
             case "minor":
                 numeral = numeral.toLowerCase();
                 break;
+            default: break;
         }
-        return chord.root.accidental() + numeral;
+        return chord.root.accidental() + numeral + name;
     }
 
     switch (node.type) {
         case "chord":
             let chord = note(node.root).chord(node.name);
-            let numeral = getNumeral(chord, scale);
+            let numeral = getNumeral(chord, node.name, scale);
             return (<div className={`chord ${chord.quality()}`}>
                 <div className="chord-substitutions">
                     <a href="#" onClick={(e) => {substituteChord(e, node, "V-I")}} className="chord-substitute">V-I</a>
