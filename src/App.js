@@ -6,10 +6,23 @@ import _ from "lodash";
 
 window.teoria = teoria;
 
-const Node = ({node, substituteChord, collapse}) => {
+const Node = ({scale, node, substituteChord, collapse}) => {
+
+    function getNumeral(chord, scale) {
+        let scaleIndex = note(chord.root.name()).scaleDegree(scale);
+        let numeral = ["?", "I", "II", "III", "IV", "V", "VI", "VII"][scaleIndex];
+        switch (chord.quality()) {
+            case "minor":
+                numeral = numeral.toLowerCase();
+                break;
+        }
+        return chord.root.accidental() + numeral;
+    }
+
     switch (node.type) {
         case "chord":
             let chord = note(node.root).chord(node.name);
+            let numeral = getNumeral(chord, scale);
             return (<div className={`chord ${chord.quality()}`}>
                 <div className="chord-substitutions">
                     <a href="#" onClick={(e) => {substituteChord(e, node, "V-I")}} className="chord-substitute">V-I</a>
@@ -17,16 +30,17 @@ const Node = ({node, substituteChord, collapse}) => {
                     <a href="#" onClick={(e) => {substituteChord(e, node, "tritone")}} className="chord-substitute">tri</a>
                 </div>
                 <div className="chord-stack">
-                    {/* <span className="chord-numeral">{numeral}</span> */}
+                    <span className="chord-numeral">{numeral}</span>
                     <span className="chord-name">{chord.name}</span>
                 </div>
             </div>);
         default: return <div className={`substitution ${node.type}`}>
                             <a href="#" onClick={(e) => {collapse(e, node)}} className="substitution-collapse">-</a>
                             {node.children.map((child) => <Node node={child}
+                                                                scale={scale}
                                                                 substituteChord={substituteChord}
                                                                 collapse={collapse}
-                                                                key={child.key}></Node>)}
+                                                                key={child.id}></Node>)}
                         </div>;
     }
 }
@@ -43,7 +57,7 @@ class Progression extends Component {
                 let V = I.interval("P5")
                 return {
                     type: "V-I",
-                    key: shortid.generate(),
+                    id: shortid.generate(),
                     children: [this.buildChord(V.name() + V.accidental(), "7", "dominant"), node]
                 }
             },
@@ -60,7 +74,7 @@ class Progression extends Component {
                 let ii = V.interval("P4").interval("M2");
                 return {
                     type: "ii-V",
-                    key: shortid.generate(),
+                    id: shortid.generate(),
                     children: [this.buildChord(ii.name() + ii.accidental(), "m7", "minor"), node]
                 }
             }
@@ -74,7 +88,7 @@ class Progression extends Component {
                 let tritone = dominant.interval("d5");
                 return {
                     type: "tritone",
-                    key: shortid.generate(),
+                    id: shortid.generate(),
                     children: [this.buildChord(tritone.name() + tritone.accidental(), "7", "dominant")]
                 }
             }
@@ -85,9 +99,9 @@ class Progression extends Component {
         super(props);
 
         let progression = this.buildChord("C", "maj7", "major");
-        /* progression = this.substitute(progression, progression.key, "V-I");
-         * progression = this.substitute(progression, progression.children[0].key, "ii-V");
-         * progression = this.substitute(progression, progression.children[0].children[0].key, "V-I");*/
+        /* progression = this.substitute(progression, progression.id, "V-I");
+         * progression = this.substitute(progression, progression.children[0].id, "ii-V");
+         * progression = this.substitute(progression, progression.children[0].children[0].id, "V-I");*/
         this.state = progression;
         this.substituteChord = this.substituteChord.bind(this);
         this.collapse = this.collapse.bind(this);
@@ -96,7 +110,7 @@ class Progression extends Component {
 
     substituteChord(e, node, substitution) {
         e.preventDefault();
-        let state = this.substitute(this.state, node.key, substitution)
+        let state = this.substitute(this.state, node.id, substitution)
         this.setState(state);
     }
 
@@ -109,7 +123,7 @@ class Progression extends Component {
 
     buildChord(root, name, quality) {
         return {
-            key: shortid.generate(),
+            id: shortid.generate(),
             type: "chord",
             root,
             name,
@@ -117,11 +131,11 @@ class Progression extends Component {
         }
     }
 
-    substitute(node, key, substitution) {
-        if (node.key !== key) {
+    substitute(node, id, substitution) {
+        if (node.id !== id) {
             if (node.children) {
                 return _.extend({}, node, {
-                    children: node.children.map((child) => this.substitute(child, key, substitution))
+                    children: node.children.map((child) => this.substitute(child, id, substitution))
                 });
             }
             return node;
@@ -152,13 +166,15 @@ class Progression extends Component {
     }
 
     render() {
+        let scale = note("c").scale("major");
         return (
             <div className="wrapper">
                 <div className="progression">
-                    <Node key={this.state.key}
-                        node={this.state}
-                        substituteChord={this.substituteChord}
-                        collapse={this.collapse}></Node>
+                    <Node key={this.state.id}
+                          scale={scale}
+                          node={this.state}
+                          substituteChord={this.substituteChord}
+                          collapse={this.collapse}></Node>
                 </div>
                 <p>Click a chord to explore possible substitutions.</p>
                 <div className="info">
