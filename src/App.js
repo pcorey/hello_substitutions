@@ -6,49 +6,80 @@ import _ from "lodash";
 
 window.teoria = teoria;
 
-const Node = ({scale, node, substituteChord, collapse}) => {
-
-    function getNumeral(chord, name, scale) {
-        let scaleIndex = note(chord.root.name()).scaleDegree(scale);
-        let numeral = ["?", "I", "II", "III", "IV", "V", "VI", "VII"][scaleIndex];
-        switch (chord.quality()) {
-            case "minor":
-                numeral = numeral.toLowerCase();
-                break;
-            default: break;
-        }
-        return chord.root.accidental() + numeral + name;
+function getNumeral(chord, name, scale) {
+    let scaleIndex = note(chord.root.name()).scaleDegree(scale);
+    let numeral = ["?", "I", "II", "III", "IV", "V", "VI", "VII"][scaleIndex];
+    switch (chord.quality()) {
+        case "minor":
+            numeral = numeral.toLowerCase();
+            break;
+        default: break;
     }
+    return chord.root.accidental() + numeral + name;
+}
 
+const Node = ({scale, node, selectChord, substituteChord, collapseChord, selected}) => {
     switch (node.type) {
         case "chord":
             let chord = note(node.root).chord(node.name);
             let numeral = getNumeral(chord, node.name, scale);
             return (<div className={`chord ${chord.quality()}`}>
-                <div className="chord-substitutions">
-                    <a href="#" onClick={(e) => {substituteChord(e, node, "V-I")}} className="chord-substitute">V-I</a>
-                    <a href="#" onClick={(e) => {substituteChord(e, node, "ii-V")}} className="chord-substitute">ii-V</a>
-                    <a href="#" onClick={(e) => {substituteChord(e, node, "tritone")}} className="chord-substitute">tri</a>
-                </div>
-                <div className="chord-stack">
-                    <span className="chord-numeral">{numeral}</span>
-                    <span className="chord-name">{chord.name}</span>
-                </div>
+    {/* <div className="chord-substitutions">
+        <a href="#" onClick={(e) => {substituteChord(e, node, "V-I")}} className="chord-substitute">V-I</a>
+        <a href="#" onClick={(e) => {substituteChord(e, node, "ii-V")}} className="chord-substitute">ii-V</a>
+        <a href="#" onClick={(e) => {substituteChord(e, node, "tritone")}} className="chord-substitute">tri</a>
+        </div> */}
+                <a href="#" onClick={(e) => {selectChord(e, node)}} className="chord-selector">
+                    <div className="chord-stack">
+                        {/* <span className="chord-numeral">{numeral}</span> */}
+                        <span className={`chord-name ${selected && selected.id === node.id ? "selected" : ""}`}>{chord.name}</span>
+                    </div>
+                </a>
             </div>);
         default: return <div className={`substitution ${node.type}`}>
-                            <a href="#" onClick={(e) => {collapse(e, node)}} className="substitution-collapse">-</a>
+                            <span className="substitution-type">{node.type}</span>
+                            <a href="#" onClick={(e) => {collapseChord(e, node)}} className="substitution-collapse">-</a>
                             {node.children.map((child) => <Node node={child}
                                                                 scale={scale}
+                                                                selectChord={selectChord}
                                                                 substituteChord={substituteChord}
-                                                                collapse={collapse}
+                                                                collapseChord={collapseChord}
+                                                                selected={selected}
                                                                 key={child.id}></Node>)}
                         </div>;
+    }
+}
+
+const Info = ({progression, selected, scale, substituteChord, substitutions}) => {
+    if (selected) {
+        let chord = note(selected.root).chord(selected.name);
+        let numeral = getNumeral(chord, selected.name, scale);
+        let key = scale.tonic.name() + scale.tonic.accidental() + " " + scale.name;
+        return (<div className="info">
+            <h1>Selected Chord</h1>
+            <p>You've selected the <span>{chord.name}</span> chord. The {chord.name} chord is the {numeral} of the key of {key}. In its current context, it's acting as the ...</p>
+            <h3>Possible substitutions:</h3>
+            {_.map(Object.keys(substitutions), (substitution) => {
+                 if (substitutions[substitution].validate(selected)) {
+                    return <p key={substitution} className="possible-substitution" onClick={(e) => {substituteChord(e, selected, substitution)}}>{substitution}</p> 
+                 }
+             })}
+            {/* <p className="possible-substitution">ii - V: <span className="minor">Dm7</span> - <span className="dominant">Cmaj7</span></p> */}
+        </div>);
+    }
+    else {
+        return (<p>Click a chord to explore possible substitutions.</p>);
     }
 }
 
 class Progression extends Component {
 
     substitutions = {
+        "chord": {
+            validate:   node => false,
+            substitute: node => node,
+            collapse:   node => node
+        },
         "V-I": {
             validate: (node) => {
                 return true;
@@ -63,7 +94,8 @@ class Progression extends Component {
                 }
             },
             collapse: (node) => {
-                
+                let child = node.children[1];
+                return this.substitutions[child.type].collapse(child);
             }
         },
         "ii-V": {
@@ -78,6 +110,10 @@ class Progression extends Component {
                     id: shortid.generate(),
                     children: [this.buildChord(ii.name() + ii.accidental(), "m7", "minor"), node]
                 }
+            },
+            collapse: (node) => {
+                let child = node.children[1];
+                return this.substitutions[child.type].collapse(child);
             }
         },
         "tritone": {
@@ -92,6 +128,12 @@ class Progression extends Component {
                     id: shortid.generate(),
                     children: [this.buildChord(tritone.name() + tritone.accidental(), "7", "dominant")]
                 }
+            },
+            collapse: (node) => {
+                let child = node.children[0];
+                let tritone = note(child.root);
+                let dominant = tritone.interval("A4");
+                return this.buildChord(dominant.name() + dominant.accidental(), "7", "dominant");
             }
         }
     }
@@ -103,16 +145,20 @@ class Progression extends Component {
         /* progression = this.substitute(progression, progression.id, "V-I");
          * progression = this.substitute(progression, progression.children[0].id, "ii-V");
          * progression = this.substitute(progression, progression.children[0].children[0].id, "V-I");*/
-        this.state = progression;
+        this.state = {
+            progression,
+            scale: note("c").scale("major"),
+            selected: undefined
+        };
         this.substituteChord = this.substituteChord.bind(this);
-        this.collapse = this.collapse.bind(this);
-        console.log("this.substitutions", this.substitutions);
+        this.collapseChord = this.collapseChord.bind(this);
+        this.selectChord = this.selectChord.bind(this);
     }
 
     substituteChord(e, node, substitution) {
         e.preventDefault();
-        let state = this.substitute(this.state, node.id, substitution)
-        this.setState(state);
+        let progression = this.substitute(this.state.progression, node.id, substitution)
+        this.setState(_.extend({}, this.state, { progression }));
     }
 
     getRootChord(node) {
@@ -149,53 +195,45 @@ class Progression extends Component {
         }
     }
 
-    collapse(e, node) {
+    collapseChord(e, node) {
         e.preventDefault();
-        switch (node.type) {
-            case "chord":
-                return node;
-            default:
-                let chord = this.getRootChord(node);
-                node.type = "chord";
-                node.root = chord.root;
-                node.name = chord.name;
-                node.quality = chord.quality;
-                delete node.children;
-                break;
+        let progression = this.collapse(this.state.progression, node.id);
+        this.setState(_.extend({}, this.state, { progression }));
+    }
+
+    collapse(node, id) {
+        if (node.id !== id) {
+            if (node.children) {
+                return _.extend({}, node, {
+                    children: node.children.map((child) => this.collapse(child, id))
+                });
+            }
         }
-        this.setState(this.state);
+        return this.substitutions[node.type].collapse(node);
+    }
+
+    selectChord(e, node) {
+        e.preventDefault();
+        this.setState(_.extend({}, this.state, { selected: node }));
     }
 
     render() {
-        let scale = note("c").scale("major");
         return (
             <div className="wrapper">
                 <div className="progression">
-                    <Node key={this.state.id}
-                          scale={scale}
-                          node={this.state}
+                    <Node key={this.state.progression.id}
+                          scale={this.state.scale}
+                          node={this.state.progression}
+                          selectChord={this.selectChord}
                           substituteChord={this.substituteChord}
-                          collapse={this.collapse}></Node>
+                          collapseChord={this.collapseChord}
+                          selected={this.state.selected}></Node>
                 </div>
-                <p>Click a chord to explore possible substitutions.</p>
-                <div className="info">
-                    <h1>Selected Chord</h1>
-                    <p>You've selected the <span>Cmaj7</span> chord. In it's current context, Cmaj7 is acting as the tonic of this chord progression.</p>
-                    {/* <select>
-                        <option>C</option>
-                        <option>C#</option>
-                        </select>
-                        <select>
-                        <option></option>
-                        <option>m</option>
-                        <option>maj7</option>
-                        <option>m7</option>
-                        <option>7</option>
-                        </select>
-                        <br/> */}
-                    <h3>Possible substitutions:</h3>
-                    <p className="possible-substitution">ii - V: <span className="minor">Dm7</span> - <span className="dominant">Cmaj7</span></p>
-                </div>
+                <Info progression={this.state.progression}
+                      selected={this.state.selected}
+                      scale={this.state.scale}
+                      substitutions={this.substitutions}
+                      substituteChord={this.substituteChord}></Info>
             </div>
         );
     }

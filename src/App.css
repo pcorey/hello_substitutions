@@ -11,13 +11,12 @@ body {
     justify-content: center;
 
     font-family: sans-serif;
-    font-weight: bold;
-    font-size: 2em;
+
+    color: #444;
 }
 
 .info {
     max-width: 500px;
-    font-size: 0.4em;
     font-weight: normal;
 }
 
@@ -42,24 +41,31 @@ body {
     flex-direction: column;
 }
 
-.chord-numeral {
+.chord-name.selected {
+    border-bottom: 2px dashed tomato;
+}
+
+.chord-selector {
     color: #444;
+    text-decoration: none;
 }
 
 .progression {
     margin: 0;
+    font-weight: bold;
+    font-size: 1.5em;
 }
 
 .minor {
-    color: rgb(52, 152, 219);
+    /* color: rgb(52, 152, 219); */
 }
 
 .major {
-    color: rgb(46, 204, 113);
+    /* color: rgb(46, 204, 113); */
 }
 
 .dominant {
-    color: rgb(243, 156, 18);
+    /* color: rgb(243, 156, 18); */
 }
 
 .minor,
@@ -92,60 +98,29 @@ body {
     right: -16px;
     font-size: 16px;
     line-height: 1;
-    color: rgba(0,0,0,0.5);
     width: 16px;
     text-align: center;
     text-decoration: none;
     margin: 0;
 }
 
-.ii-V {
+.substitution {
     position: relative;
-    border: 16px solid rgba(52, 152, 219, 0.125);
+    margin: 0;
+    padding: 0;
     font-size: 1em;
 }
 
-.ii-V::before {
+.substitution .substitution-type {
     position: absolute;
-    top: -15px;
-    left: 0px;
+    margin: 0;
+    top: -16px;
+    left: -12px;
     font-size: 12px;
     line-height: 16px;
-    color: #fff;
-    font-weight: normal;
-    content: "ii-V";
+    font-weight: bold;
 }
 
-.V-I {
-    position: relative;
-    border: 16px solid rgba(243, 156, 18, 0.125);
-    font-size: 1em;
-}
-
-.V-I::before {
-    position: absolute;
-    top: -15px;
-    left: 0px;
-    font-size: 12px;
-    line-height: 16px;
-	  color: #fff;
-	  font-weight: normal;
-	  content: "V-I";
-}
-
-.tritone {
-    position: relative;
-    border: 16px solid rgba(243, 156, 18, 0.125);
-    font-size: 1em;
-}
-
-.tritone::before {
-    position: absolute;
-    top: -15px;
-    left: 0px;
-    font-size: 12px;
-    line-height: 16px;
-	  color: #fff;
-	  font-weight: normal;
-	  content: "tritone";
-}
+.ii-V    { border: 16px solid #eee; }
+.V-I     { border: 16px solid #ddd; }
+.tritone { border: 16px solid #ccc; }
