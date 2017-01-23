@@ -18,35 +18,48 @@ function getNumeral(chord, name, scale) {
     return chord.root.accidental() + numeral + name;
 }
 
+function getDepth(node) {
+    if (!node.children) {
+        return 0;
+    }
+    return 1 + node.children.reduce((max, child) => {
+        return Math.max(max, getDepth(child));
+    }, 0);
+}
+
 const Node = ({scale, node, selectChord, substituteChord, collapseChord, selected}) => {
     switch (node.type) {
         case "chord":
             let chord = note(node.root).chord(node.name);
             let numeral = getNumeral(chord, node.name, scale);
-            return (<div className={`chord ${chord.quality()}`}>
-    {/* <div className="chord-substitutions">
-        <a href="#" onClick={(e) => {substituteChord(e, node, "V-I")}} className="chord-substitute">V-I</a>
-        <a href="#" onClick={(e) => {substituteChord(e, node, "ii-V")}} className="chord-substitute">ii-V</a>
-        <a href="#" onClick={(e) => {substituteChord(e, node, "tritone")}} className="chord-substitute">tri</a>
-        </div> */}
-                <a href="#" onClick={(e) => {selectChord(e, node)}} className="chord-selector">
-                    <div className="chord-stack">
-                        {/* <span className="chord-numeral">{numeral}</span> */}
+            return (
+                <span className={`chord ${chord.quality()}`}>
+                    <a href="#" onClick={(e) => {selectChord(e, node)}} className="chord-selector">
                         <span className={`chord-name ${selected && selected.id === node.id ? "selected" : ""}`}>{chord.name}</span>
-                    </div>
-                </a>
-            </div>);
-        default: return <div className={`substitution ${node.type}`}>
-                            <span className="substitution-type">{node.type}</span>
-                            <a href="#" onClick={(e) => {collapseChord(e, node)}} className="substitution-collapse">-</a>
-                            {node.children.map((child) => <Node node={child}
-                                                                scale={scale}
-                                                                selectChord={selectChord}
-                                                                substituteChord={substituteChord}
-                                                                collapseChord={collapseChord}
-                                                                selected={selected}
-                                                                key={child.id}></Node>)}
-                        </div>;
+                    </a>
+                </span>
+            );
+        default:
+            let depth = getDepth(node) - 1;
+            let style = { padding: `${depth * 20}px 0` };
+            return (
+                <span className={`substitution ${node.type}`}
+                      style={style}>
+                    <span className="substitution-type">{node.type}</span>
+                    {node.children.map((child) => {
+                         return (
+                             <Node node={child}
+                                   scale={scale}
+                                   selectChord={selectChord}
+                                   substituteChord={substituteChord}
+                                   collapseChord={collapseChord}
+                                   selected={selected}
+                                   key={child.id}></Node>
+                         );
+                     })}
+                    <a href="#" onClick={(e) => {collapseChord(e, node)}} className="substitution-collapse">-</a>
+                </span>
+            );
     }
 }
 
@@ -218,9 +231,11 @@ class Progression extends Component {
     }
 
     render() {
+        let depth = getDepth(this.state.progression);
+        let style = { lineHeight: `${depth * (16 * 2 + 4 * 2) + 64}px` };
         return (
             <div className="wrapper">
-                <div className="progression">
+                <div className="progression" style={style}>
                     <Node key={this.state.progression.id}
                           scale={this.state.scale}
                           node={this.state.progression}
