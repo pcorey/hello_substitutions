@@ -298,7 +298,8 @@ class Progression extends Component {
     constructor(props) {
         super(props);
 
-        this.state = document.location.hash ? JSON.parse(document.location.hash.substr(1)) : {};
+        let hash = document.location.hash.substr(1);
+        this.state = document.location.hash ? JSON.parse(decodeURIComponent(hash)) : {};
 
         this.substituteChord = this.substituteChord.bind(this);
         this.collapseChord = this.collapseChord.bind(this);
@@ -411,7 +412,7 @@ class Progression extends Component {
     }
 
     render() {
-        document.location.hash = JSON.stringify(this.state);
+        document.location.hash = encodeURIComponent(JSON.stringify(this.state));
         let progression = this.state.progression || [];
         if (this.state.scale) {
             let scale = note(this.state.scale.note).scale(this.state.scale.scale);
