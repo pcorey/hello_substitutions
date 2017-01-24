@@ -119,24 +119,35 @@ const Info = ({progression, selected, scale, substituteChord, substitutions, get
 }
 
 const AddChord = ({scale, addChord}) => {
-    let triads = [
-        "maj7",
-        "m7",
-        "m7",
-        "maj7",
-        "dominant",
-        "m7",
-        "dim7"
-    ];
+    let triads = {
+        major: [
+            "maj7",
+            "m7",
+            "m7",
+            "maj7",
+            "dominant",
+            "m7",
+            "dim7"
+        ],
+        minor: [
+            "mM7",
+            "half-diminished",
+            "aug7",
+            "m7",
+            "dominant",
+            "maj7",
+            "dim7"
+        ]
+    };
 
     let chords = scale.simple().map((note, index) => {
-        return teoria.note(note).chord(triads[index]);
+        return teoria.note(note).chord(triads[scale.name][index]);
     });
 
     function go(e) {
         let index = parseInt(e.target.value, 10);
         if (!isNaN(index)) {
-            addChord(scale.simple()[index], triads[index]);
+            addChord(scale.simple()[index], triads[scale.name][index]);
             e.target.value = "";
         }
     }
@@ -153,7 +164,7 @@ const AddChord = ({scale, addChord}) => {
 
 const ChooseKey = ({chooseKey}) => {
     let notes = [ "C", "F", "Bb", "Eb", "Ab", "Db", "Gb", "B", "E", "A", "D", "G" ];
-    let scales = [ "major" ];
+    let scales = [ "major", "minor" ];
 
     function go(e) {
         e.preventDefault();
@@ -295,6 +306,7 @@ class Progression extends Component {
         this.chooseKey = this.chooseKey.bind(this);
         this.addChord = this.addChord.bind(this);
         this.getParent = this.getParent.bind(this);
+        this.reset = this.reset.bind(this);
     }
 
     substituteChord(e, node, substitution) {
@@ -399,6 +411,10 @@ class Progression extends Component {
         return get(this.state.progression, node.id);
     }
 
+    reset() {
+        this.setState({});
+    }
+
     render() {
         document.location.hash = JSON.stringify(this.state);
         let progression = this.state.progression || [];
@@ -429,6 +445,9 @@ class Progression extends Component {
                           substitutions={this.substitutions}
                           substituteChord={this.substituteChord}
                           getParent={this.getParent}></Info>
+                    <br/>
+                    <br/>
+                    <button onClick={this.reset}>Reset</button>
                 </div>
             );
         }
