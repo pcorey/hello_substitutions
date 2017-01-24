@@ -25,11 +25,12 @@ body {
 .progression,
 .progression * {
     text-align: justify;
+    word-wrap: break-word;
     margin: 4px;
 }
 
 .chord-name.selected {
-    border-bottom: 2px dashed tomato;
+    background-color: tomato;
 }
 
 .chord-selector {
@@ -77,16 +78,24 @@ body {
     text-align: center;
 }
 
-.substitution-collapse {
+.substitution-header {
     position: absolute;
     top: -16px;
-    right: -16px;
+    left: -16px;
+    margin: 0;
     font-size: 16px;
     line-height: 1;
+    color: #444;
+    white-space: no-wrap;
+}
+
+.substitution-collapse {
+    font-size: 14px;
     width: 16px;
     text-align: center;
     text-decoration: none;
     margin: 0;
+    color: #444;
 }
 
 .substitution {
@@ -97,10 +106,7 @@ body {
 }
 
 .substitution .substitution-type {
-    position: absolute;
     margin: 0;
-    top: -16px;
-    left: -12px;
     font-size: 12px;
     line-height: 16px;
     font-weight: bold;
