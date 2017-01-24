@@ -419,6 +419,7 @@ class Progression extends Component {
             let style = { lineHeight: `${depth * (16 * 2 + 4 * 2) + 64}px` };
             return (
                 <div className="wrapper">
+                    <h2>Key: {this.state.scale.note} {this.state.scale.scale}</h2>
                     <div className="progression" style={style}>
                         {progression && progression.map((child) => {
                             return (
