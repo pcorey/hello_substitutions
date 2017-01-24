@@ -306,7 +306,6 @@ class Progression extends Component {
         this.chooseKey = this.chooseKey.bind(this);
         this.addChord = this.addChord.bind(this);
         this.getParent = this.getParent.bind(this);
-        this.reset = this.reset.bind(this);
     }
 
     substituteChord(e, node, substitution) {
@@ -411,10 +410,6 @@ class Progression extends Component {
         return get(this.state.progression, node.id);
     }
 
-    reset() {
-        this.setState({});
-    }
-
     render() {
         document.location.hash = JSON.stringify(this.state);
         let progression = this.state.progression || [];
@@ -447,7 +442,7 @@ class Progression extends Component {
                           getParent={this.getParent}></Info>
                     <br/>
                     <br/>
-                    <button onClick={this.reset}>Reset</button>
+                    <a href="/">Reset</a>
                 </div>
             );
         }
