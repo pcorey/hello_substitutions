@@ -36,7 +36,6 @@ const Node = ({scale, node, selectChord, substituteChord, collapseChord, selecte
     switch (node.type) {
         case "chord":
             let chord = note(node.root).chord(node.name);
-            let numeral = getNumeral(chord, node.name, scale);
             return (
                 <span className={`chord ${chord.quality()}`}>
                     <a href="#" onClick={(e) => {selectChord(e, node)}} className="chord-selector">
@@ -135,7 +134,7 @@ const AddChord = ({scale, addChord}) => {
     });
 
     function go(e) {
-        let index = parseInt(e.target.value);
+        let index = parseInt(e.target.value, 10);
         if (!isNaN(index)) {
             addChord(scale.simple()[index], triads[index]);
             e.target.value = "";
@@ -200,7 +199,7 @@ class Progression extends Component {
                 return {
                     type: "V-I",
                     id: shortid.generate(),
-                    children: [this.buildChord(V.name() + V.accidental(), "7", "dominant"), node]
+                    children: [this.buildChord(V.name() + V.accidental(), "7"), node]
                 }
             },
             collapse: (node) => {
@@ -214,10 +213,10 @@ class Progression extends Component {
             context: (node, parent) => {
                 let V = parent.children[0];
                 let I = parent.children[1];
-                if (node.id == V.id) {
+                if (node.id === V.id) {
                     return `the secondary dominant (V chord) in a V-I substitution.`;
                 }
-                else if (node.id == I.id) {
+                else if (node.id === I.id) {
                     return `the tonic (I chord) in a V-I substitution.`;
                 }
             }
@@ -232,7 +231,7 @@ class Progression extends Component {
                 return {
                     type: "ii-V",
                     id: shortid.generate(),
-                    children: [this.buildChord(ii.name() + ii.accidental(), "m7", "minor"), node]
+                    children: [this.buildChord(ii.name() + ii.accidental(), "m7"), node]
                 }
             },
             collapse: (node) => {
@@ -246,10 +245,10 @@ class Progression extends Component {
             context: (node, parent) => {
                 let ii = parent.children[0];
                 let V = parent.children[1];
-                if (node.id == ii.id) {
+                if (node.id === ii.id) {
                     return `the supertonic (ii chord) in a ii-V substitution.`;
                 }
-                else if (node.id == V.id) {
+                else if (node.id === V.id) {
                     return `the dominant (V chord) chord in a ii-V substitution.`;
                 }
             }
@@ -264,14 +263,14 @@ class Progression extends Component {
                 return {
                     type: "tritone",
                     id: shortid.generate(),
-                    children: [this.buildChord(tritone.name() + tritone.accidental(), "7", "dominant")]
+                    children: [this.buildChord(tritone.name() + tritone.accidental(), "7")]
                 }
             },
             collapse: (node) => {
                 let child = node.children[0];
                 let tritone = note(child.root);
                 let dominant = tritone.interval("A4");
-                return this.buildChord(dominant.name() + dominant.accidental(), "7", "dominant");
+                return this.buildChord(dominant.name() + dominant.accidental(), "7");
             },
             descriptions: [
                 "In a tritone substitution, the substitute chord only differs slightly from the original chord. If the original chord in a song is G7 (G, B, D, F), the tritone substitution would be D♭7 (D♭, F, A♭, C♭). Note that the 3rd and 7th notes of the G7 chord are found in the D♭7 chord (albeit with a change of role). The tritone substitution is widely used for V7 chords in the popular jazz chord progression \"ii-V-I\".",
@@ -288,12 +287,8 @@ class Progression extends Component {
     constructor(props) {
         super(props);
 
-        let progression = this.buildChord("C", "maj7", "major");
-        this.state = {
-            progression: [],
-            scale: undefined,
-            selected: undefined
-        };
+        this.state = document.location.hash ? JSON.parse(document.location.hash.substr(1)) : {};
+
         this.substituteChord = this.substituteChord.bind(this);
         this.collapseChord = this.collapseChord.bind(this);
         this.selectChord = this.selectChord.bind(this);
@@ -315,13 +310,12 @@ class Progression extends Component {
         return this.getRootChord(node.children[node.children.length - 1]);
     }
 
-    buildChord(root, name, quality) {
+    buildChord(root, name) {
         return {
             id: shortid.generate(),
             type: "chord",
             root,
-            name,
-            quality
+            name
         }
     }
 
@@ -372,13 +366,13 @@ class Progression extends Component {
 
     chooseKey(note, scale) {
         this.setState(_.extend({}, this.state, {
-            scale: teoria.note(note).scale(scale)
+            scale: { note, scale }
         }));
     }
 
     addChord(note, chord) {
         this.setState(_.extend({}, this.state, {
-            progression: [ ...this.state.progression, this.buildChord(note, chord) ]
+            progression: [ ...(this.state.progression || []), this.buildChord(note, chord) ]
         }));
     }
 
@@ -389,7 +383,7 @@ class Progression extends Component {
                     return parent || get(child, id);
                 }, undefined);
             }
-            let found = _.find(node.children, (child) => child.id == id);
+            let found = _.find(node.children, (child) => child.id === id);
             if (found) {
                 return node;
             }
@@ -406,16 +400,19 @@ class Progression extends Component {
     }
 
     render() {
+        document.location.hash = JSON.stringify(this.state);
+        let progression = this.state.progression || [];
         if (this.state.scale) {
-            let depth = getDepth(this.state.progression);
+            let scale = note(this.state.scale.note).scale(this.state.scale.scale);
+            let depth = getDepth(progression);
             let style = { lineHeight: `${depth * (16 * 2 + 4 * 2) + 64}px` };
             return (
                 <div className="wrapper">
                     <div className="progression" style={style}>
-                        {this.state.progression && this.state.progression.map((child) => {
+                        {progression && progression.map((child) => {
                             return (
                                 <Node node={child}
-                                      scale={this.state.scale}
+                                      scale={scale}
                                       selectChord={this.selectChord}
                                       substituteChord={this.substituteChord}
                                       collapseChord={this.collapseChord}
@@ -423,19 +420,12 @@ class Progression extends Component {
                                       key={child.id}></Node>
                             );
                         })}
-                        {/* <Node key={this.state.progression.id}
-                            scale={this.state.scale}
-                            node={this.state.progression}
-                            selectChord={this.selectChord}
-                            substituteChord={this.substituteChord}
-                            collapseChord={this.collapseChord}
-                            selected={this.state.selected}></Node> */}
-                    <AddChord scale={this.state.scale}
+                    <AddChord scale={scale}
                               addChord={this.addChord}></AddChord>
                     </div>
-                    <Info progression={this.state.progression}
+                    <Info progression={progression}
                           selected={this.state.selected}
-                          scale={this.state.scale}
+                          scale={scale}
                           substitutions={this.substitutions}
                           substituteChord={this.substituteChord}
                           getParent={this.getParent}></Info>
